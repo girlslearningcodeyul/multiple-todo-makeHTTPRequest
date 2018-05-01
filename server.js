@@ -5,15 +5,36 @@ const bodyParser = require('body-parser')
 
 app.use(bodyParser.raw({ type: '*/*' }))
 
+let serverState = {
+    items: {},
+    listName : "clothes"
+}
+
+app.get('/getListName',(req,res)=>{
+    res.send(serverState.listName)
+})
+
+app.post("/changeListName",(req,res)=>{
+    serverState.listName = req.body.toString()
+    res.send("SUCCESS")
+})
 
 // The following two endpoints are so that the browser can load the HTML and Javascript
 app.get('/', (req, res) => res.send(fs.readFileSync('./public/index.html').toString()))
 app.get('/app.js', (req, res) => res.send(fs.readFileSync('./public/app.js').toString()))
 
-// 
-let serverState = {
-    items: {}
-}
+app.get('/clearItems', (req, res)=>{
+    serverState.items = {};
+    res.send('list cleared')
+})
+
+app.post('/reverse', (req, res)=>{
+    let parsedBody = req.body.toString();
+    let reversed = serverState.items[parsedBody];
+    reversed = reversed.reverse();
+    //console.log(reversed)
+    res.send('list reversed')
+})
 
 app.post('/items', (req, res) => {
     let parsedBody = JSON.parse(req.body.toString())
@@ -26,7 +47,7 @@ app.post('/items', (req, res) => {
 app.post('/addItem', (req, res) => {
     // Remember: the body of an HTTP response is just a string.
     // You need to convert it to a javascript object
-    let parsedBody = JSON.parse(req.body.toString())
+    let parsedBody = JSON.parse(req.body.toString());
     // This is just a convenience to save some typing later on
     let listName = parsedBody.listName;
     // If the list doesn't exist, create it
@@ -36,6 +57,5 @@ app.post('/addItem', (req, res) => {
     serverState.items[listName] = serverState.items[listName].concat(parsedBody.item)
     res.send(JSON.stringify(serverState.items[listName]));
 })
-
 
 app.listen(3000, () => console.log('Example app listening on port 3000!'))
